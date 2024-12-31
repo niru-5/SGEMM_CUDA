@@ -8,12 +8,15 @@ find_package(CUDA REQUIRED)
 include(CheckLanguage)
 check_language(CUDA)
 
+set(CUDA_NVCC_FLAGS_DEBUG "-G")
+
 set(CMAKE_CXX_STANDARD 20)
-set(CUDA_COMPUTE_CAPABILITY 86)
+set(CUDA_COMPUTE_CAPABILITY 61) # GTX 1070 Ti is 6.1 compute capability
 
 # in debug mode, add debug symbols to device code
 # this disables most optimizations and kills performance
-add_compile_options("$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G;-src-in-ptx>")
+add_compile_options("$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G>")
+# add_compile_options("$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CUDA>>:-G;-src-in-ptx>")
 # add_compile_options("--ptxas-options=-v")
 
 # Configure header file search paths

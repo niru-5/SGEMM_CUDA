@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   int k = 3;
   int n = 4;
   int print = 1;
-  cudaError_t cudaStat;  // cudaMalloc status
+  // cudaError_t cudaStat;  // cudaMalloc status
   cublasStatus_t stat;   // cuBLAS functions status
   cublasHandle_t handle; // cuBLAS context
 

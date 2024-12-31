@@ -8,9 +8,9 @@
             "name": "CUDA C++: Launch",
             "type": "cuda-gdb",
             "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
+            "program": "${workspaceFolder}/build/sgemm",
             "args": [
-                "10"
+                "2"
             ],
             "cwd": "${workspaceFolder}",
         },
