@@ -9,3 +9,7 @@ cmake -E chdir "build" cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_BUILD_
 # cmake -DCMAKE_BUILD_TYPE=Release -S . -B "build"
 # Build the library.
 cmake --build "build" --config Release
+
+cmake -E chdir "build" ctest --build-config Release
+
+sudo cmake --build "build" --config Release --target install

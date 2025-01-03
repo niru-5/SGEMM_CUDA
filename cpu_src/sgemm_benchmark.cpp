@@ -60,6 +60,65 @@ void sgemm_cache_aware_save_mult(float *A, float *B, float *C, int m, int n, int
     }
 }
 
+void sgemm_cache_aware_save_mult_tiling(float *A, float *B, float *C, int m, int n, int k) {
+    // lets break it down to 16 tiles. 
+    // for now, lets assume that m,n,k are perfectly divisible by 16. 
+    int div_val = 64;
+    int new_m = m/div_val;
+    int new_n = n/div_val;
+    int new_k = k/div_val;
+
+    // #pragma omp parallel for collapse(2) schedule(static)
+    // #pragma omp parallel for
+    for (int i = 0; i < new_m; i++){
+        for (int j =0; j< new_n; j++){
+            for (int l=0; l< new_k; l++){
+                sgemm_cache_aware(&A[i*m*div_val + l*div_val], 
+                            &B[l*n*div_val + j*div_val], 
+                            &C[i*n*div_val +j*div_val], 
+                            div_val, div_val, div_val);
+            }
+        }
+    }
+}
+
+void sgemm_cache_aware_save_mult_tiling_same_function(float *A, float *B, float *C, int m, int n, int k) {
+    // lets break it down to 16 tiles. 
+    // for now, lets assume that m,n,k are perfectly divisible by 16. 
+    int div_val = 128;
+    int new_m = m/div_val;
+    int new_n = n/div_val;
+    int new_k = k/div_val;
+
+    // 
+    // #pragma omp parallel for
+    #pragma omp parallel for collapse(2) schedule(static)
+    for (int i = 0; i < new_m; i++){
+        for (int j =0; j< new_n; j++){
+            for (int l=0; l< new_k; l++){
+                
+                float *A_block = &A[i*m*div_val + l*div_val];
+                float *B_block = &B[l*n*div_val + j*div_val];
+                float *C_block = &C[i*n*div_val +j*div_val];
+                
+                #pragma omp parallel for
+                for (int i = 0; i < div_val; i++) {
+                    for (int l = 0; l < div_val; l++) {
+                        for (int j = 0; j < div_val; j++) {
+                            C_block[i * div_val + j] += 
+                                        A_block[i * div_val + l] * 
+                                        B_block[l * div_val + j];
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+
+
 // First, create a fixture class that contains the common setup
 class SGEMMFixture : public benchmark::Fixture {
 public:
@@ -126,6 +185,22 @@ BENCHMARK_DEFINE_F(SGEMMFixture, CacheAwareSaveMult)(benchmark::State& state) {
     }
 }
 
+BENCHMARK_DEFINE_F(SGEMMFixture, CacheAwareSaveMultTiling)(benchmark::State& state) {
+    for (auto _ : state) {
+        ResetC();
+        sgemm_cache_aware_save_mult_tiling(A, B, C, m, n, k);
+    }
+}
+
+
+
+BENCHMARK_DEFINE_F(SGEMMFixture, CacheAwareSaveMultTilingSameFunction)(benchmark::State& state) {
+    for (auto _ : state) {
+        ResetC();
+        sgemm_cache_aware_save_mult_tiling_same_function(A, B, C, m, n, k);
+    }
+}
+
 // Register all benchmarks with same settings
 template <typename T>
 void ConfigureBenchmark(T* b) {
@@ -139,8 +214,10 @@ void ConfigureBenchmark(T* b) {
 
 // Apply settings to all benchmarks
 // BENCHMARK_REGISTER_F(SGEMMFixture, Simple)->Apply(ConfigureBenchmark);
-BENCHMARK_REGISTER_F(SGEMMFixture, CacheAware)->Apply(ConfigureBenchmark);
+// BENCHMARK_REGISTER_F(SGEMMFixture, CacheAware)->Apply(ConfigureBenchmark);
 // BENCHMARK_REGISTER_F(SGEMMFixture, SIMD)->Apply(ConfigureBenchmark);
 // BENCHMARK_REGISTER_F(SGEMMFixture, CacheAwareSaveMult)->Apply(ConfigureBenchmark);
+// BENCHMARK_REGISTER_F(SGEMMFixture, CacheAwareSaveMultTiling)->Apply(ConfigureBenchmark);
+BENCHMARK_REGISTER_F(SGEMMFixture, CacheAwareSaveMultTilingSameFunction)->Apply(ConfigureBenchmark);
 
 BENCHMARK_MAIN();

@@ -24,6 +24,10 @@ target_link_libraries(sgemm_benchmark
 # Enable optimizations for Release build
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wno-unused-parameter)
+endif()
+
 # Add compiler warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(sgemm_benchmark PRIVATE -Wall -Wextra)
