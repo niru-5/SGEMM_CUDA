@@ -119,7 +119,7 @@ void sgemm_cache_aware_save_mult_tiling(float *A, float *B, float *C, int m, int
 
 
 int main() {
-    omp_set_num_threads(6);
+    // omp_set_num_threads(6);
     int m = 1024;
     int n = 1024;
     int k = 1024;
